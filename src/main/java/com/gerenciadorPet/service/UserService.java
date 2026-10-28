@@ -25,11 +25,11 @@ public class UserService {
      */
     //Login do Usuario
     public UserLoginResponse loginUser(UserLoginRequest userLogin) {
-        User newUser = userRepository.findBy(username)
-                .orElsethrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Username not found"));
+        User newUser = userRepository.findbyUsername(userLogin.username())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Username not found"));
 
         if(!userLogin.password().equals(newUser.getPassword())) {
-            throw new RuntimeException("Password não compativel");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha invalida");
         }
 
         return new UserLoginResponse(
@@ -53,7 +53,7 @@ public class UserService {
                 .build();
 
         if(userRepository.existsByUsername(userRegister.username())) {
-            throw new RuntimeException("Username já está em uso");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Username já está em uso");
         }
 
         userRepository.save(newUser);
