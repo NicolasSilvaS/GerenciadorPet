@@ -2,9 +2,12 @@ package com.gerenciadorPet.service;
 
 
 import com.gerenciadorPet.dto.auth.*;
+import com.gerenciadorPet.dto.user.UserRequest;
+import com.gerenciadorPet.dto.user.UserResponse;
 import com.gerenciadorPet.model.User;
 import com.gerenciadorPet.model.UserRole;
 import com.gerenciadorPet.repository.UserRepository;
+import com.gerenciadorPet.utils.BCryptEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    private final BCryptEncoder passwordEncoder;
     /*
     ============================================
                  FUNÇÕES DO USUARIO
@@ -26,16 +31,18 @@ public class UserService {
     //Login do Usuario
     public UserLoginResponse loginUser(UserLoginRequest userLogin) {
         User newUser = userRepository.findbyUsername(userLogin.username())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Username not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Username not found"));
 
-        if(!userLogin.password().equals(newUser.getPassword())) {
+        if(!passwordEncoder.encoder().matches(userLogin.password(), newUser.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha invalida");
         }
 
         return new UserLoginResponse(
                 newUser.getId(),
                 newUser.getUsername(),
-                newUser.getEmail()
+                newUser.getEmail(),
+                newUser.getAdmin(),
+                newUser.getActive()
                 );
     }
 
@@ -47,13 +54,13 @@ public class UserService {
         User newUser = User.builder()
                 .username(userRegister.username())
                 .email(userRegister.email())
-                .password(userRegister.password())// vou criar metodo depois para dar hash nisso
+                .password(passwordEncoder.encoder().encode(userRegister.password()))
                 .admin(UserRole.STANDARD)
                 .active(true)
                 .build();
 
         if(userRepository.existsByUsername(userRegister.username())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Username já está em uso");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username já está em uso");
         }
 
         userRepository.save(newUser);
@@ -61,7 +68,9 @@ public class UserService {
         return new UserRegisterResponse(
                 newUser.getId(),
                 newUser.getEmail(),
-                newUser.getUsername()
+                newUser.getUsername(),
+                newUser.getAdmin(),
+                newUser.getActive()
                 );
     }
     /*
@@ -69,13 +78,47 @@ public class UserService {
             CONTROLE DE SENHAS E RECUPERACAO
     ============================================
      */
-    //Pedir Recuperação de Senha -> Manda email e vai para tela de trocar senha, troca a senha mas não precisa colocar senha
-    /*Editar SenhaRecuperacao -> proximo passo de Recuperacao de senha,
 
-    só temporario prefiro procurar algo q não esteja diretamente no usuario service
-    */
+    public UserResponse updateUser(UserRequest updatedUser) {
+        User user = userRepository.findById(updatedUser.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autorizado"));
 
-    //Editar Senha -> Não manda email de verificacao mas pede senha
-    //Editar Nome
-    //Editar Email -> Manda email de verificação de autoria
+        //Editar Senha
+        if(passwordEncoder.encoder().matches(updatedUser.password(), user.getPassword()) && user.getPassword() != null) {
+            user.setPassword(updatedUser.password());
+        }
+
+        //Editar nome
+        if((updatedUser.username()) != null) {
+            user.setPassword(passwordEncoder.encoder().encode(updatedUser.password()));
+        }
+
+        //Editar email
+        if((updatedUser.email()) != null) {
+            user.setEmail(updatedUser.email());
+        }
+
+        user = User.builder()
+                .username(updatedUser.username())
+                .email(updatedUser.email())
+                .password(passwordEncoder.encoder().encode(updatedUser.password()))
+                .admin(UserRole.STANDARD)
+                .active(true)
+                .build();
+
+        userRepository.save(user);
+
+        // Inclui o perfil e o estado atual do usuário na resposta.
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAdmin(),
+                user.getActive()
+                );
+    }
+
+    public void recuperarSenha() {
+
+    }
 }

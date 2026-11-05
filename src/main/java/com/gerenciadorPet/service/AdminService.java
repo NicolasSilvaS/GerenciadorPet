@@ -3,9 +3,13 @@ package com.gerenciadorPet.service;
 
 import com.gerenciadorPet.dto.user.*;
 import com.gerenciadorPet.model.User;
+import com.gerenciadorPet.model.UserRole;
 import com.gerenciadorPet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import com.gerenciadorPet.utils.BCryptEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @RequiredArgsConstructor
@@ -13,14 +17,7 @@ import org.springframework.stereotype.Service;
 public class AdminService {
 
     private final UserRepository userRepository;
-
-    /*
-    ============================================
-                 FUNÇÕES DO ADMIN
-    ============================================
-    Não tem permissão para mexer nos pets só nos usuarios,
-    se deletar vai ter q rolar cascade btw
-     */
+    private final BCryptEncoder passwordEncoder;
 
     //Criar Usuarios manual
     public UserResponse createUser(UserRequest newUser) {
@@ -43,16 +40,26 @@ public class AdminService {
            );
     }
 
-    //Listar Usuarios
-    //Editar Perfis
     //Atualizar perfis
+    public UserResponse updateUser(UserRequest updatedUser) {
+        User user = userRepository.findById(updatedUser.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setUsername(updatedUser.username());
+        user.setEmail(updatedUser.email());
+        user.setPassword(passwordEncoder.encoder().encode(updatedUser.password()));
+        user.setAdmin(updatedUser.admin());
+        user.setActive(updatedUser.active());
+
+        userRepository.save(user);
+
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAdmin(),
+                user.getActive()
+        );
+    }
     //Desativar Perfis
-
-
-    /*
-    ============================================
-              CONTROLE DE SENHAS
-    ============================================
-    Admin pode ter a possibilidade de trocar senha de usuarios tb
-     */
 }
