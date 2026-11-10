@@ -30,6 +30,9 @@ public class User {
         @Column(length = 100, nullable = false)
         private String password;
 
+        @Column(length = 36)
+        private String passwordResetTokenId;
+
         @Column(nullable = false)
         private Boolean active;
 

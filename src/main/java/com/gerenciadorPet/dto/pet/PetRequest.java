@@ -3,12 +3,17 @@ package com.gerenciadorPet.dto.pet;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
 
 public record PetRequest(
         @NotBlank(message = "Nome é obrigatório")
+        @Size(max = 100, message = "Nome deve ter no máximo 100 caracteres")
         String name,
 
         @NotBlank(message = "Raça é obrigatória")
+        @Size(max = 100, message = "Raça deve ter no máximo 100 caracteres")
         String breed,
 
         @Positive(message = "Peso deve ser maior que zero")
@@ -18,5 +23,9 @@ public record PetRequest(
         double height,
 
         @NotNull(message = "Id do usuário é obrigatório")
-        Long userId
+        @Positive(message = "Id do usuário deve ser maior que zero")
+        Long userId,
+
+        @NotNull(message = "Data de nascimento é obrigatória")
+        LocalDateTime bornIn
 ) {}

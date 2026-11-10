@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 @Builder
-@Table(name = "petLog")
+@Table(name = "pet_log")
 @Entity
 public class Historic {
 
@@ -25,6 +25,7 @@ public class Historic {
     @Column(length = 100, nullable = false)
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private HistoricType type;
 

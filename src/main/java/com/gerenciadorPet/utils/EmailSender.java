@@ -1,29 +1,48 @@
 package com.gerenciadorPet.utils;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.gerenciadorPet.model.User;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Properties;
-
-@Configuration
+@Service
 public class EmailSender {
-    @Bean
-    public JavaMailSender getJavaMailSender() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
 
-        mailSender.setUsername("my.gmail@gmail.com");
-        mailSender.setPassword("password");
+    private final JavaMailSender mailSender;
+    private final String senderAddress;
+    private final String passwordResetUrl;
 
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "true");
+    public EmailSender(
+            JavaMailSender mailSender,
+            @Value("${app.mail.from}") String senderAddress,
+            @Value("${app.frontend.password-reset-url}") String passwordResetUrl
+    ) {
+        this.mailSender = mailSender;
+        this.senderAddress = senderAddress;
+        this.passwordResetUrl = passwordResetUrl;
+    }
 
-        return mailSender;
+    public void sendPasswordResetEmail(User user, String token) {
+        String resetLink = UriComponentsBuilder.fromUriString(passwordResetUrl)
+                .queryParam("token", token)
+                .build()
+                .encode()
+                .toUriString();
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(user.getEmail());
+        message.setSubject("Redefinição de senha - GerenciadorPet");
+        message.setText("""
+                Olá, %s.
+
+                Para redefinir sua senha, acesse o link abaixo. Ele expira em 15 minutos e só pode ser usado uma vez:
+                %s
+
+                Se você não solicitou a redefinição, ignore este e-mail.
+                """.formatted(user.getUsername(), resetLink));
+        mailSender.send(message);
     }
 }
