@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,28 +21,28 @@ public class PetController {
     private final PetService petService;
 
     @PostMapping
-    public ResponseEntity<PetResponse> create(@Valid @RequestBody PetRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(petService.createPet(request));
+    public ResponseEntity<PetResponse> create(@Valid @RequestBody PetRequest request, @AuthenticationPrincipal String username) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(petService.createPet(request, username));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PetResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(petService.getPet(id));
+    public ResponseEntity<PetResponse> getById(@PathVariable Long id, @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(petService.getPet(id, username));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PetResponse>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(petService.getPetsByUser(userId));
+    public ResponseEntity<List<PetResponse>> getByUser(@PathVariable Long userId, @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(petService.getPetsByUser(userId, username));
     }
 
     @PutMapping
-    public ResponseEntity<PetResponse> update(@Valid @RequestBody PetUpdateRequest request) {
-        return ResponseEntity.ok(petService.updatePet(request));
+    public ResponseEntity<PetResponse> update(@Valid @RequestBody PetUpdateRequest request, @AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(petService.updatePet(request, username));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        petService.deletePet(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal String username) {
+        petService.deletePet(id, username);
         return ResponseEntity.noContent().build();
     }
 }
