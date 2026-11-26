@@ -30,6 +30,6 @@ public class Historic {
     private HistoricType type;
 
     @ManyToOne
-    @JoinColumn(name = "pet")
+    @JoinColumn(name = "pet_id")
     private Pet pet;
 }

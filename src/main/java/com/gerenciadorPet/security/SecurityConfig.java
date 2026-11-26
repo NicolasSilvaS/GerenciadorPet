@@ -30,7 +30,24 @@ public class SecurityConfig {
                                 "/api/users/forgot-password",
                                 "/api/users/reset-password"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/reset-password.html").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/",
+                                "/index.html",
+                                "/app-core.js",
+                                "/api.js",
+                                "/auth.js",
+                                "/shell.js",
+                                "/pages.js",
+                                "/pets.js",
+                                "/appointments.js",
+                                "/metrics.js",
+                                "/memories.js",
+                                "/admin.js",
+                                "/profile.js",
+                                "/styles.css",
+                                "/reset-password.html",
+                                "/frontend/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

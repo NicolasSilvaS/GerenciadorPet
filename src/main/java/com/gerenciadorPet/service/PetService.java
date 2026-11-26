@@ -42,9 +42,30 @@ public class PetService {
         return toResponse(savedPet);
     }
 
+    @Transactional
+    public PetResponse createPet(PetRequest request, String authenticatedUsername) {
+        User owner = userRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"));
+        if (owner.getId() != request.userId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é permitido cadastrar pet para outro usuário");
+        }
+        return createPet(request);
+    }
+
     @Transactional(readOnly = true)
     public PetResponse getPet(Long id) {
         return toResponse(findPet(id));
+    }
+
+    @Transactional(readOnly = true)
+    public PetResponse getPet(Long id, String authenticatedUsername) {
+        User owner = userRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"));
+        Pet pet = findPet(id);
+        if (pet.getOwner().getId() != owner.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é permitido consultar pet de outro usuário");
+        }
+        return toResponse(pet);
     }
 
     @Transactional(readOnly = true)
@@ -56,6 +77,16 @@ public class PetService {
         return petRepository.findByOwner_Id(userId).stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PetResponse> getPetsByUser(Long userId, String authenticatedUsername) {
+        User owner = userRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"));
+        if (owner.getId() != userId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é permitido consultar pets de outro usuário");
+        }
+        return getPetsByUser(userId);
     }
 
     @Transactional
@@ -72,8 +103,30 @@ public class PetService {
     }
 
     @Transactional
+    public PetResponse updatePet(PetUpdateRequest request, String authenticatedUsername) {
+        User owner = userRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"));
+        Pet pet = findPet(request.id());
+        if (pet.getOwner().getId() != owner.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é permitido alterar pet de outro usuário");
+        }
+        return updatePet(request);
+    }
+
+    @Transactional
     public void deletePet(Long id) {
         Pet pet = findPet(id);
+        petRepository.delete(pet);
+    }
+
+    @Transactional
+    public void deletePet(Long id, String authenticatedUsername) {
+        User owner = userRepository.findByUsername(authenticatedUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado"));
+        Pet pet = findPet(id);
+        if (pet.getOwner().getId() != owner.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é permitido excluir pet de outro usuário");
+        }
         petRepository.delete(pet);
     }
 

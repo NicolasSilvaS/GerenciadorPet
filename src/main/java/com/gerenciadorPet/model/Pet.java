@@ -38,7 +38,7 @@ public class Pet {
     private LocalDateTime bornIn;
 
     @ManyToOne
-    @JoinColumn(name = "owner", nullable = false)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @OneToMany(mappedBy = "pet")
@@ -46,4 +46,7 @@ public class Pet {
 
     @OneToMany(mappedBy = "pet")
     private List<Appointment> appointments = new ArrayList<>();
+
+    @Column(length = 500)
+    private String imageUrl;
 }

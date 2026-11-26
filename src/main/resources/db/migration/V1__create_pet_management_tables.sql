@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS pet_logs (
     description VARCHAR(300) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     type VARCHAR(255) NOT NULL,
-    pet_id BIGINT NOT NULL, -
+    pet_id BIGINT NOT NULL,
     PRIMARY KEY (id),
     INDEX idx_pet_logs_pet_created_at (pet_id, created_at),
     CONSTRAINT fk_pet_logs_pet FOREIGN KEY (pet_id) REFERENCES pets (id)

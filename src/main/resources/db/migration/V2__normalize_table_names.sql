@@ -1,1 +1,1 @@
-RENAME TABLE `petLog` TO pet_log;
+RENAME TABLE `pet_logs` TO `pet_log`;
